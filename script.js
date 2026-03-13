@@ -26,10 +26,10 @@ const CONTACTS = {
   omar: {
     fn: 'Omar Sharif',
     org: 'eXp Realty - Manzil Realty Group',
-    title: 'Real Estate Sales Representative',
+    title: 'Provincial Team Lead',
     tel: '+13067163556',
     email: 'omarsha@gmail.com',
-    url: 'https://manzil.ca',
+    url: 'https://omarsharif.exprealty.com',
     note: 'Halal Homeownership - Saskatchewan & Alberta | @skrealtor_omar'
   }
 };
@@ -102,8 +102,9 @@ function trackEvent(action, agent, detail) {
   if (N8N_WEBHOOK_URL) {
     fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload),
+      mode: 'no-cors',
       keepalive: true
     }).catch(function() {
       // Silent fail — tracking should never block UX
@@ -111,7 +112,27 @@ function trackEvent(action, agent, detail) {
   }
 }
 
+// ---- AGENT-SPECIFIC HEADER ----
+function getAgent() {
+  var params = new URLSearchParams(window.location.search);
+  return params.get('a') || '';
+}
+
+function personalizeHeader() {
+  var agent = getAgent();
+  if (!agent || !CONTACTS[agent]) return;
+
+  var c = CONTACTS[agent];
+  var logoText = document.querySelector('.logo-text');
+  if (logoText) {
+    logoText.innerHTML = '<span class="logo-manzil">' + c.fn.toUpperCase() + '</span>' +
+      '<span class="logo-divider">|</span>' +
+      '<span class="logo-exp">eXp Realty &middot; Manzil Realty Group</span>';
+  }
+}
+
 // ---- PAGE LOAD TRACKING ----
 document.addEventListener('DOMContentLoaded', function() {
-  trackEvent('page_scan', '', getVenue());
+  personalizeHeader();
+  trackEvent('page_scan', getAgent() || '', getVenue());
 });
