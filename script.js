@@ -4,7 +4,7 @@
    ============================================ */
 
 // ---- CONFIG ----
-const N8N_WEBHOOK_URL = 'https://n8n.srv728397.hstgr.cloud/webhook/manzil-qr-event';
+const N8N_WEBHOOK_URL = 'https://n8n.srv728397.hstgr.cloud/webhook/manzil-qr';
 
 // ---- VENUE DETECTION ----
 function getVenue() {

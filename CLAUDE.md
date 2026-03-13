@@ -34,4 +34,6 @@ Generate QR for: `https://manzil-qr-landing.vercel.app?v=your-venue-slug`
 Each venue gets a unique slug for tracking.
 
 ## N8N Webhook
-Update `N8N_WEBHOOK_URL` in script.js after creating the workflow.
+n8n workflow ID: piyWOGEHb1QTN9N4 ("Manzil QR Tracker")
+Webhook URL: https://n8n.srv728397.hstgr.cloud/webhook/manzil-qr
+IMPORTANT: Must be activated from n8n UI (API activation doesn't register webhooks).
