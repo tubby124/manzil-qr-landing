@@ -136,9 +136,10 @@ function personalizeHeader() {
   var canvas = document.getElementById('particles');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
-  var dpr = window.devicePixelRatio || 1;
+  // Cap DPR at 2 — 3x mobile devices choke on shadowBlur at full res
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var isMobile = /Mobi|Android/i.test(navigator.userAgent);
   var particles = [];
-  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var frame = 0;
 
   function resize() {
@@ -169,15 +170,18 @@ function personalizeHeader() {
       driftPeriod: rand(200, 500),
       driftOffset: rand(0, 1000),
       isStar: isStar,
-      hasGlow: Math.random() < 0.4,
+      hasGlow: !isMobile && Math.random() < 0.4,
       glowSize: rand(8, 20)
     };
   }
 
   function init() {
     resize();
-    var count = Math.min(50, Math.floor(30 * (window.innerWidth / 375)));
-    if (count < 15) count = 15;
+    // Fewer particles on mobile for performance
+    var count = isMobile
+      ? Math.min(25, Math.floor(20 * (window.innerWidth / 375)))
+      : Math.min(50, Math.floor(30 * (window.innerWidth / 375)));
+    if (count < 12) count = 12;
     particles = [];
     for (var i = 0; i < count; i++) {
       particles.push(createParticle(false));
@@ -206,10 +210,8 @@ function personalizeHeader() {
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
 
-      if (!reducedMotion) {
-        p.y -= p.speed;
-        p.x += Math.sin((frame + p.driftOffset) / p.driftPeriod) * p.driftAmp;
-      }
+      p.y -= p.speed;
+      p.x += Math.sin((frame + p.driftOffset) / p.driftPeriod) * p.driftAmp;
 
       if (p.y < -p.radius * 2) {
         particles[i] = createParticle(true);
@@ -238,9 +240,7 @@ function personalizeHeader() {
     }
 
     frame++;
-    if (!reducedMotion) {
-      requestAnimationFrame(render);
-    }
+    requestAnimationFrame(render);
   }
 
   init();
@@ -252,7 +252,6 @@ function personalizeHeader() {
     resizeTimer = setTimeout(function() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       init();
-      if (reducedMotion) render();
     }, 150);
   });
 })();
