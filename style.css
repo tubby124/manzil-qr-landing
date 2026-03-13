@@ -307,10 +307,10 @@ body {
 }
 
 .cta-phone {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 400;
   color: var(--text-muted);
-  margin-top: 0.15rem;
+  display: block;
 }
 
 /* ---- PARTNERSHIP SECTION ---- */
