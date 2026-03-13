@@ -138,15 +138,20 @@ function personalizeHeader() {
   var ctx = canvas.getContext('2d');
   // Cap DPR at 2 — 3x mobile devices choke on shadowBlur at full res
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   var particles = [];
   var frame = 0;
+  var rafId = null;
+  var running = false;
 
   function resize() {
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
   }
 
@@ -177,7 +182,6 @@ function personalizeHeader() {
 
   function init() {
     resize();
-    // Fewer particles on mobile for performance
     var count = isMobile
       ? Math.min(25, Math.floor(20 * (window.innerWidth / 375)))
       : Math.min(50, Math.floor(30 * (window.innerWidth / 375)));
@@ -203,6 +207,7 @@ function personalizeHeader() {
   }
 
   function render() {
+    if (!running) return;
     var w = window.innerWidth;
     var h = window.innerHeight;
     ctx.clearRect(0, 0, w, h);
@@ -240,18 +245,55 @@ function personalizeHeader() {
     }
 
     frame++;
-    requestAnimationFrame(render);
+    rafId = requestAnimationFrame(render);
   }
 
+  function startLoop() {
+    if (running) return;
+    running = true;
+    rafId = requestAnimationFrame(render);
+  }
+
+  function stopLoop() {
+    running = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  // Init and start
   init();
-  render();
+  startLoop();
+
+  // Safari pauses rAF on fixed canvases — restart on visibility change
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      startLoop();
+    } else {
+      stopLoop();
+    }
+  });
+
+  // iOS Safari may throttle until user interaction — restart on first touch/scroll
+  var wakeEvents = ['touchstart', 'scroll', 'click'];
+  function wake() {
+    if (!running) startLoop();
+  }
+  for (var i = 0; i < wakeEvents.length; i++) {
+    window.addEventListener(wakeEvents[i], wake, { passive: true });
+  }
+
+  // Also restart with setInterval fallback — catches Safari edge cases
+  setInterval(function() {
+    if (document.visibilityState === 'visible' && !running) {
+      startLoop();
+    }
+  }, 2000);
 
   var resizeTimer;
   window.addEventListener('resize', function() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
       init();
+      if (!running) startLoop();
     }, 150);
   });
 })();
