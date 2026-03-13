@@ -131,6 +131,132 @@ function personalizeHeader() {
   }
 }
 
+// ---- GOLDEN LANTERN BOKEH ----
+(function() {
+  var canvas = document.getElementById('particles');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var particles = [];
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var frame = 0;
+
+  function resize() {
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.scale(dpr, dpr);
+  }
+
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+
+  function createParticle(startAtBottom) {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var isGold = Math.random() < 0.7;
+    var isStar = Math.random() < 0.15;
+    var r = rand(3, 18);
+    var opacity = rand(0.15, 0.45);
+    return {
+      x: rand(0, w),
+      y: startAtBottom ? h + rand(10, 60) : rand(0, h),
+      radius: r,
+      opacity: opacity,
+      color: isGold ? '201,169,110' : '14,154,167',
+      speed: rand(0.15, 0.45),
+      driftAmp: rand(0.2, 0.6),
+      driftPeriod: rand(200, 500),
+      driftOffset: rand(0, 1000),
+      isStar: isStar,
+      hasGlow: Math.random() < 0.4,
+      glowSize: rand(8, 20)
+    };
+  }
+
+  function init() {
+    resize();
+    var count = Math.min(50, Math.floor(30 * (window.innerWidth / 375)));
+    if (count < 15) count = 15;
+    particles = [];
+    for (var i = 0; i < count; i++) {
+      particles.push(createParticle(false));
+    }
+  }
+
+  function drawStar(cx, cy, outerR, innerR) {
+    var points = 8;
+    ctx.beginPath();
+    for (var i = 0; i < points * 2; i++) {
+      var r = i % 2 === 0 ? outerR : innerR;
+      var angle = (Math.PI * i) / points - Math.PI / 2;
+      var x = cx + r * Math.cos(angle);
+      var y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  function render() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+
+      if (!reducedMotion) {
+        p.y -= p.speed;
+        p.x += Math.sin((frame + p.driftOffset) / p.driftPeriod) * p.driftAmp;
+      }
+
+      if (p.y < -p.radius * 2) {
+        particles[i] = createParticle(true);
+        continue;
+      }
+
+      ctx.save();
+
+      if (p.hasGlow) {
+        ctx.shadowColor = 'rgba(' + p.color + ',0.6)';
+        ctx.shadowBlur = p.glowSize;
+      }
+
+      ctx.fillStyle = 'rgba(' + p.color + ',' + p.opacity + ')';
+
+      if (p.isStar) {
+        drawStar(p.x, p.y, p.radius, p.radius * 0.45);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    frame++;
+    if (!reducedMotion) {
+      requestAnimationFrame(render);
+    }
+  }
+
+  init();
+  render();
+
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      init();
+      if (reducedMotion) render();
+    }, 150);
+  });
+})();
+
 // ---- PAGE LOAD TRACKING ----
 document.addEventListener('DOMContentLoaded', function() {
   personalizeHeader();
