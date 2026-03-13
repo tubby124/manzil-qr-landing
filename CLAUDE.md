@@ -23,7 +23,7 @@ Plain HTML + CSS + vanilla JS. No build step. Deployed on Vercel as static site.
 - Per-venue QR codes use `?v=venue-slug` URL param
 
 ## Social Links
-- Hasan: IG @nasahctus, FB /nasahctus, YT @nasahctus, redleafhomes.ca
+- Hasan: IG @nasahctus, FB /nasahctus, redleafhomes.ca
 - Omar: IG @skrealtor_omar, FB /omar.sharif.yxerealtor
 
 ## To Swap Omar's Photo
